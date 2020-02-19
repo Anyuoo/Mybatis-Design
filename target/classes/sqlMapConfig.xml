@@ -1,0 +1,34 @@
+
+<!--mybatis主配置文件-->
+<configuration>
+    <!--    <properties resource=""></properties>-->
+    <!--    <typeAliases>-->
+
+    <!--        <package name=""/>-->
+    <!--    </typeAliases>-->
+    <environments default="mysql">
+        <!--        配置MySQL环境-->
+        <environment id="mysql">
+            <!--            配置事务类型-->
+            <transactionManager type="JDBC"></transactionManager>
+            <!--            配置连接池-->
+            <dataSource type="POOLED">
+                <!--                配置连接数据库的四个基本信息-->
+                <!--                <property name="driver" value="${database.driver}"/>-->
+                <!--                <property name="url" value="${database.url}"/>-->
+                <!--                <property name="username" value="${database.username}"/>-->
+                <!--                <property name="password" value="${database.password}"/>-->
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/mybatis-study"/>
+                <property name="username" value="root"/>
+                <property name="password" value="123321abc."/>
+            </dataSource>
+        </environment>
+    </environments>
+    <!--    映射配置文件地址-->
+    <mappers>
+                <mapper resource="com/anyu/dao/IUserMapper.xml"></mapper>
+
+    </mappers>
+
+</configuration>
