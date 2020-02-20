@@ -16,7 +16,7 @@ public class Configuration {
         return Mappers;
     }
     public void setMappers(Map<String, Mapper> mappers) {
-        Mappers.putAll(mappers);
+        Mappers = mappers;
     }
 
     public String getDriver() {

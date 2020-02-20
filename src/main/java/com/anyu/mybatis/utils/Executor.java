@@ -11,6 +11,9 @@ import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.List;
 
+/***
+ * 查询所有sql语句值行
+ */
 public class Executor {
     public <E> List<E> selectList(Mapper mapper, Connection connection){
         PreparedStatement preparedStatement=null;
@@ -56,6 +59,7 @@ public class Executor {
             release(preparedStatement,resultSet);
         }
     }
+
     private void release(PreparedStatement preparedStatement,ResultSet resultSet){
         if (null!=resultSet){
             try {

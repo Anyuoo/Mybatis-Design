@@ -1,5 +1,6 @@
 package com.anyu.mybatis.utils;
 
+import com.anyu.mybatis.annotations.Select;
 import com.anyu.mybatis.configuration.Configuration;
 import com.anyu.mybatis.configuration.Mapper;
 import com.anyu.mybatis.io.Resources;
@@ -11,6 +12,9 @@ import org.dom4j.io.SAXReader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,9 +27,10 @@ public class XMLConfigBuilder {
      * @throws DocumentException
      */
     public static Configuration loadConfiguration(InputStream config)  {
+        Configuration configuration = null;
         try{
             //定义封装连接信息的配置的对象
-            Configuration configuration = new Configuration();
+            configuration = new Configuration();
             //1.获取SAXReader对象
             SAXReader reader = new SAXReader();
             //2.根据字节输入流获取Document对象
@@ -61,7 +66,7 @@ public class XMLConfigBuilder {
             //解析mappers下的mapper并判断是注解还是xml配置
             List<Element> mapperElements = root.selectNodes("//mappers/mapper");
             for (Element mapperElement : mapperElements) {
-                Attribute attribute = mapperElement.attribute("resources");
+                Attribute attribute = mapperElement.attribute("resource");
                 //如果attribute属性为空则使用的注解，不为空使用的xml
                 if (attribute != null) {
                     System.out.println("使用xml配置dao接口");
@@ -73,15 +78,15 @@ public class XMLConfigBuilder {
                 } else {
                     System.out.println("使用注解配置dao接口");
                     String daoClassPass = mapperElement.attributeValue("class");
-                    Map<String, Mapper> mappers = loadMapperAnnotation("daoClassPass");
+                    System.out.println(daoClassPass);
+                    Map<String, Mapper> mappers = loadMapperAnnotation(daoClassPass);
                     configuration.setMappers(mappers);
                 }
             }
-            return configuration;
         }catch (Exception e){
-            System.out.println("based on function mybatis/configuration/loadConfiguration");
-            return null;
+            System.out.println("based on function mybatis/xmlConfigBuilder/loadConfiguration");
         }
+        return configuration;
     }
     /**
      * 根据xml配置存放读取的dao接口属性
@@ -90,10 +95,10 @@ public class XMLConfigBuilder {
      * @return
      */
     private static Map<String, Mapper> loadMapperConfiguration(String mapperPath) {
-        InputStream inputStream=null;
+        InputStream inputStream = null;
+        //创建一个map容器存放mapper对象
+        Map<String, Mapper> mappers = new HashMap<String, Mapper>();
         try {
-            //创建一个map容器存放mapper对象
-            Map<String, Mapper> mappers = new HashMap<String, Mapper>();
             //1.根据字节获取输入流
             inputStream = Resources.getResourceAsStream(mapperPath);
             //2.根据字节输入流Document对象
@@ -102,7 +107,7 @@ public class XMLConfigBuilder {
             //3.h获取根节点
             Element root = document.getRootElement();
             //4.获取节点的namespace属性值(map中的key)
-            String nameSpace=root.attributeValue("namespace");
+            String nameSpace = root.attributeValue("namespace");
             //5.获取所有select节点
             List<Element> selectElements=root.selectNodes("//select");
             //6.遍历select节点
@@ -122,17 +127,68 @@ public class XMLConfigBuilder {
                 //吧key和mapper存入mappers中
                 mappers.put(key,mapper);
             }
-            return mappers;
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("based on xml");
             System.out.println("创建mappers失败");
-            return null;
+            System.out.println("where:mybatis/utils/xmlConfigBuilder/loadMapperConfiguration");
+
         }
+        return mappers;
     }
 
+    /**
+     * 根据annotation配置读取dao接口属性
+     *
+     * @param daoClassPath
+     * @return
+     */
     private static Map<String, Mapper> loadMapperAnnotation(String daoClassPath) {
         //创建一个map容器存放mapper对象
         Map<String, Mapper> mappers = new HashMap<String, Mapper>();
+        try {
+            //1.根据全限定类名得到接口名
+            Class daoMainClass = Class.forName(daoClassPath);
+            //2.根据接口获取所有方法
+            Method[] methods = daoMainClass.getMethods();
+            //3.遍历Method数组
+            for (Method method : methods) {
+                //方法数组是否有Select注解
+                Boolean isSelect = method.isAnnotationPresent(Select.class);
+                if (isSelect) {
+                    //创建Mapper对象存储方法返回值，sql语句
+                    Mapper mapper = new Mapper();
+                    //取出注解的value值
+                    Select selectAnno = method.getAnnotation(Select.class);
+                    String sqlString = selectAnno.value();
+                    mapper.setQueryString(sqlString);
+                    //获取方法的返回值，要求带有泛型信息
+                    Type type = method.getGenericReturnType();
+                    //判断type是不是参数化的类型
+                    if (type instanceof ParameterizedType) {
+                        //强转
+                        ParameterizedType parameterizedType = (ParameterizedType) type;
+                        //得到参数类型的实际参数
+                        Type[] types = parameterizedType.getActualTypeArguments();
+                        //取出第一个
+                        Class domainClass = (Class) types[0];
+                        //获取doMainClass的类名
+                        String resultType = domainClass.getName();
+                        //给mapper赋值
+                        mapper.setResultType(resultType);
+                    }
+                    //组装key
+                    //获取方法名
+                    String methodName = method.getName();
+                    String className = method.getDeclaringClass().getName();
+                    String key = className + "." + methodName;
+                    //mappers赋值
+                    mappers.put(key, mapper);
+                }
+            }
+            return mappers;
+        } catch (Exception e) {
+            System.out.println("where:mybatis/utils/xmlConfigBuilder/loadMapperAnnotation");
+        }
 
 
         return mappers;

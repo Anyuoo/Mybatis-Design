@@ -2,6 +2,7 @@ package com.anyu.dao;
 
 
 import com.anyu.entity.User;
+import com.anyu.mybatis.annotations.Select;
 
 
 import java.util.List;
@@ -15,5 +16,6 @@ public interface IUserDao {
      *
      * @return
      */
+    @Select("select * from user")
     List<User> findAll();
 }
