@@ -35,7 +35,7 @@ public class MapperProxy implements InvocationHandler {
         Mapper mapper=mappers.get(key);
         //判断mapper是否存在
         if (null==mapper){
-            throw new IllegalArgumentException("传入参数key不合法");
+            throw new IllegalArgumentException("传入参数key不合法where:mybatis/proxy/MapperProxy");
         }
         //调用工具类查询所有
        return new Executor().selectList(mapper,connection);

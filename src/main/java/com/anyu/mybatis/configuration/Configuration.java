@@ -1,5 +1,6 @@
 package com.anyu.mybatis.configuration;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -16,7 +17,11 @@ public class Configuration {
         return Mappers;
     }
     public void setMappers(Map<String, Mapper> mappers) {
-        Mappers = mappers;
+        if (Mappers == null) {
+            Mappers = mappers;
+        } else {
+            Mappers.putAll(mappers);
+        }
     }
 
     public String getDriver() {

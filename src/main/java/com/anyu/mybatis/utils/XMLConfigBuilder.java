@@ -189,8 +189,6 @@ public class XMLConfigBuilder {
         } catch (Exception e) {
             System.out.println("where:mybatis/utils/xmlConfigBuilder/loadMapperAnnotation");
         }
-
-
         return mappers;
     }
 
